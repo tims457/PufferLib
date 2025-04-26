@@ -149,3 +149,7 @@ checkpoints/
 experiments/
 wandb/
 raylib/
+raylib*/
+runs/
+c_advantage.c
+*.code-workspace
