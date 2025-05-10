@@ -87,6 +87,8 @@ def evaluate(data):
         with profile.env:
             o, r, d, t, info, env_id, mask = data.vecenv.recv()
             env_id = env_id.tolist()
+        # print(f"o.shape: {o.shape}")
+        # raise Exception()
 
         with profile.eval_misc:
             data.global_step += sum(mask)
