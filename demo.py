@@ -42,6 +42,7 @@ def init_wandb(args, name, id=None, resume=True):
         resume=resume,
         config=args,
         name=name,
+
     )
     return wandb
 
@@ -126,7 +127,7 @@ def sweep_carbs(args, env_name, make_env, policy_cls, rnn_cls):
     import wandb
     sweep_id = wandb.sweep(
         sweep=args['sweep'],
-        project="carbs",
+        project=args['sweep']['project'],
     )
     target_metric = args['sweep']['metric']['name'].split('/')[-1]
     sweep_parameters = args['sweep']['parameters']
@@ -186,10 +187,10 @@ def sweep_carbs(args, env_name, make_env, policy_cls, rnn_cls):
         carbs_param('train', 'vf_clip_coef', 'logit', sweep_parameters, search_center=0.1),
         carbs_param('train', 'max_grad_norm', 'linear', sweep_parameters, search_center=0.5),
         carbs_param('train', 'ent_coef', 'log', sweep_parameters, search_center=0.01),
-        carbs_param('train', 'batch_size', 'log', sweep_parameters,
-            search_center=default_batch, is_integer=True),
-        carbs_param('train', 'minibatch_size', 'log', sweep_parameters,
-            search_center=default_minibatch, is_integer=True),
+        # carbs_param('train', 'batch_size', 'log', sweep_parameters,
+        #     search_center=default_batch, is_integer=True),
+        # carbs_param('train', 'minibatch_size', 'log', sweep_parameters,
+        #     search_center=default_minibatch, is_integer=True),
         carbs_param('train', 'bptt_horizon', 'log', sweep_parameters,
             search_center=16, is_integer=True),
     ]
@@ -231,10 +232,10 @@ def sweep_carbs(args, env_name, make_env, policy_cls, rnn_cls):
         train_suggestion = {k.split('/')[1]: v for k, v in suggestion.items() if k.startswith('train/')}
         env_suggestion = {k.split('/')[1]: v for k, v in suggestion.items() if k.startswith('env/')}
         args['train'].update(train_suggestion)
-        args['train']['batch_size'] = closest_power(
-            train_suggestion['batch_size'])
-        args['train']['minibatch_size'] = closest_power(
-            train_suggestion['minibatch_size'])
+        # args['train']['batch_size'] = closest_power(
+        #     train_suggestion['batch_size'])
+        # args['train']['minibatch_size'] = closest_power(
+        #     train_suggestion['minibatch_size'])
         args['train']['bptt_horizon'] = closest_power(
             train_suggestion['bptt_horizon'])
 
@@ -251,6 +252,7 @@ def sweep_carbs(args, env_name, make_env, policy_cls, rnn_cls):
         print(wandb.config.train)
         print(wandb.config.env)
         print(wandb.config.policy)
+
         try:
             stats, uptime, new_elos, vecenv['vecenv'] = train(args, make_env, policy_cls, rnn_cls,
                 wandb, elos=elos, vecenv=vecenv['vecenv'] if cache_vecenv else None)

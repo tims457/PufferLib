@@ -16,7 +16,7 @@ class Policy(nn.Module):
         hidden_size=512,
         output_size=512,
         framestack=1,
-        flat_size=12288,
+        flat_size=1536,
         channels_last=True,
         
     ):
@@ -44,10 +44,18 @@ class Policy(nn.Module):
             nn.ReLU(),
         )
 
-        self.actor = pufferlib.pytorch.layer_init( nn.Linear(hidden_size, env.single_action_space.n), std=0.01)
+        self.actor = nn.Sequential(
+            pufferlib.pytorch.layer_init(nn.Linear(hidden_size, hidden_size), std=0.01),
+            nn.ReLU(),
+            pufferlib.pytorch.layer_init(nn.Linear(hidden_size, env.single_action_space.n), std=0.01)
+        )
 
         # critic
-        self.value_fn = pufferlib.pytorch.layer_init( nn.Linear(output_size, 1), std=1)
+        self.value_fn = nn.Sequential(
+            pufferlib.pytorch.layer_init( nn.Linear(output_size, output_size), std=1),
+            nn.ReLU(),
+            pufferlib.pytorch.layer_init( nn.Linear(output_size, 1), std=1),
+        )
 
 
     def forward(self, observations):
