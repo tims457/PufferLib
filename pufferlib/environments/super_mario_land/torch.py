@@ -15,7 +15,7 @@ class Policy(nn.Module):
         input_size=512,
         hidden_size=512,
         output_size=512,
-        framestack=1,
+        framestack=8,
         flat_size=1536,
         channels_last=True,
         
@@ -24,7 +24,7 @@ class Policy(nn.Module):
 
         self.dtype = pufferlib.pytorch.nativize_dtype(env.emulated)
         self.channels_last = channels_last
-
+        self.framestack = framestack
         self.screen_network = nn.Sequential(
             pufferlib.pytorch.layer_init(nn.Conv2d(framestack, 32, 8, stride=4)),
             nn.ReLU(),
@@ -65,13 +65,19 @@ class Policy(nn.Module):
 
     def encode_observations(self, observations):
         # Nativize the tensor
-        observations = pufferlib.pytorch.nativize_tensor(observations, self.dtype)
+        if self.framestack == 1:
+            observations = pufferlib.pytorch.nativize_tensor(observations, self.dtype)
+            # Pop out the screen observations, we need to extract features first
+            screen_obs = observations.pop("screen")
+            if self.channels_last:
+                screen_obs = screen_obs.permute(0, 3, 1, 2)
+        else:
+            screen_obs = torch.squeeze(observations)
+            # add batch dimension if not present
+            if screen_obs.ndim == 3:
+                screen_obs = screen_obs.unsqueeze(0)
 
-        # Pop out the screen observations, we need to extract features first
-        screen_obs = observations.pop("screen")
-
-        if self.channels_last:
-            screen_obs = screen_obs.permute(0, 3, 1, 2)
+        
         screen_features = self.screen_network(screen_obs.float()/255.0)
 
 

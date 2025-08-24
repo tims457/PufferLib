@@ -7,10 +7,10 @@ from gymnasium.spaces import Box
 from gymnasium.wrappers.frame_stack import LazyFrames
 
 from super_mario_land_rl.mario_env import SuperMarioLandEnv
-
+import numpy as np
 import pufferlib.emulation
 import pufferlib.postprocess
-
+import time
 
 def env_creator(name="super_mario_land"):
     return functools.partial(make, name)
@@ -22,7 +22,7 @@ def make(
     state_path=None,
     buf=None,
     render_mode="rgb_array",
-    framestack=1,
+    framestack=8,
 ):
     """Super Mario Land"""
     env = SuperMarioLandEnv(render_mode=render_mode)
@@ -30,7 +30,7 @@ def make(
     env = pufferlib.postprocess.EpisodeStats(env)
 
     if framestack > 1:
-        env = FrameStackWrapper(env, framestack)
+        env = gym.wrappers.FrameStack(env, framestack)
 
     return pufferlib.emulation.GymnasiumPufferEnv(env=env, buf=buf)
 

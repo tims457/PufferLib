@@ -49,6 +49,7 @@ def init_wandb(args, name, id=None, resume=True):
 def sweep(args, env_name, make_env, policy_cls, rnn_cls):
     import wandb
     sweep_id = wandb.sweep(sweep=args['sweep'], project=args['wandb_project'])
+    
 
     def main():
         try:
@@ -143,10 +144,12 @@ def sweep_carbs(args, env_name, make_env, policy_cls, rnn_cls):
             search_center=min_timesteps, is_integer=True))
 
     batch_param = sweep_parameters['train']['parameters']['batch_size']
-    default_batch = (batch_param['max'] - batch_param['min']) // 2
+    # default_batch = (batch_param['max'] - batch_param['min']) // 2
+    default_batch = batch_param['values'][3]
 
-    minibatch_param = sweep_parameters['train']['parameters']['minibatch_size']
-    default_minibatch = (minibatch_param['max'] - minibatch_param['min']) // 2
+    # minibatch_param = sweep_parameters['train']['parameters']['minibatch_size']
+    # default_minibatch = (minibatch_param['max'] - minibatch_param['min']) // 2
+    # default_minibatch = minibatch_param['values'][0]
 
     if 'env' in sweep_parameters:
         env_params = sweep_parameters['env']['parameters']
@@ -187,7 +190,7 @@ def sweep_carbs(args, env_name, make_env, policy_cls, rnn_cls):
         carbs_param('train', 'vf_clip_coef', 'logit', sweep_parameters, search_center=0.1),
         carbs_param('train', 'max_grad_norm', 'linear', sweep_parameters, search_center=0.5),
         carbs_param('train', 'ent_coef', 'log', sweep_parameters, search_center=0.01),
-        # carbs_param('train', 'batch_size', 'log', sweep_parameters,
+        # carbs_param('train', 'batch_size', 'linear', sweep_parameters,
         #     search_center=default_batch, is_integer=True),
         # carbs_param('train', 'minibatch_size', 'log', sweep_parameters,
         #     search_center=default_minibatch, is_integer=True),
@@ -308,7 +311,9 @@ def train(args, make_env, policy_cls, rnn_cls, wandb,
             overwork=args['vec_overwork'],
             backend=vec,
         )
-
+        
+        
+    print(f"making policy {policy_cls} with rnn {rnn_cls}")
     policy = make_policy(vecenv.driver_env, policy_cls, rnn_cls, args)
 
     '''

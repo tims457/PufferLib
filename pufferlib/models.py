@@ -173,7 +173,7 @@ class Convolutional(nn.Module):
         return actions, value
 
     def encode_observations(self, observations):
-        if self.channels_last:
+        if self.channels_last and len(observations.shape) > 2:
             observations = observations.permute(0, 3, 1, 2)
         if self.downsample > 1:
             observations = observations[:, :, ::self.downsample, ::self.downsample]

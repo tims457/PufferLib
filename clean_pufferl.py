@@ -181,9 +181,13 @@ def train(data):
 
             with profile.train_forward:
                 if experience.lstm_h is not None:
-                    _, newlogprob, entropy, newvalue, lstm_state = data.policy(
-                        obs, state=lstm_state, action=atn)
-                    lstm_state = (lstm_state[0].detach(), lstm_state[1].detach())
+                    try:
+                        _, newlogprob, entropy, newvalue, lstm_state = data.policy(
+                            obs, state=lstm_state, action=atn)
+                        lstm_state = (lstm_state[0].detach(), lstm_state[1].detach())
+                    except Exception as e:
+                        T()
+                        raise e
                 else:
                     _, newlogprob, entropy, newvalue = data.policy(
                         obs.reshape(-1, *data.vecenv.single_observation_space.shape),
@@ -426,7 +430,7 @@ class Experience:
         num_minibatches = batch_size / minibatch_size
         self.num_minibatches = int(num_minibatches)
         if self.num_minibatches != num_minibatches:
-            raise ValueError('batch_size must be divisible by minibatch_size')
+            raise ValueError(f'batch_size {batch_size} must be divisible by minibatch_size {minibatch_size}')
 
         minibatch_rows = minibatch_size / bptt_horizon
         self.minibatch_rows = int(minibatch_rows)
@@ -585,7 +589,7 @@ def rollout(env_creator, env_kwargs, policy_cls, rnn_cls, agent_creator, agent_k
 
     frames = []
     tick = 0
-    while tick <= 2000:
+    while tick <= 4000:
         if tick % 1 == 0:
             render = driver.render()
             if driver.render_mode == 'ansi':
